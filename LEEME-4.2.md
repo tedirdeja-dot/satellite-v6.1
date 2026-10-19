@@ -1,4 +1,4 @@
-# Satellite Wallpaper 4.2
+# Satellite Wallpaper 4.2.1
 
 ## Uso
 1. Al abrir la app, elige 0, 15, 30 o 60 minutos. La elección queda guardada.
@@ -69,3 +69,14 @@ No se afirma un porcentaje de mejora: las optimizaciones aún requieren medició
 
 Referencias: https://developer.android.com/reference/android/content/Intent
 https://developer.android.com/reference/android/webkit/WebViewClient
+
+## Corrección 4.2.1
+El registro de GitHub aportado confirma que la versión 4.2 compiló Kotlin, ejecutó
+testDebugUnitTest y generó el APK (assembleDebug). El workflow terminó con error por
+UnspecifiedRegisterReceiverFlag en MainActivity, no por un error del compilador.
+Se usan ContextCompat.registerReceiver y RECEIVER_NOT_EXPORTED en los tres puntos
+de registro. Se añade AndroidX Core 1.13.1 y android.useAndroidX=true para compatibilidad
+con versiones anteriores a Android 13. Lint sigue activado, sin baseline ni supresiones.
+versionCode=22; versionName=4.2.1. El workflow no requiere cambios.
+La corrección 4.2.1 se ha revisado estáticamente; debe volver a ejecutarse en GitHub.
+La ejecución real de la app y las mediciones de velocidad siguen pendientes.

@@ -35,8 +35,9 @@ class MainActivity : Activity() {
     override fun onStart() {
         super.onStart()
         val filter = android.content.IntentFilter(SatelliteWallpaperService.ACTION_CACHE_UPDATED)
-        if (Build.VERSION.SDK_INT >= 33) registerReceiver(updates, filter, android.content.Context.RECEIVER_NOT_EXPORTED)
-        else registerReceiver(updates, filter)
+        androidx.core.content.ContextCompat.registerReceiver(
+            this, updates, filter, androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
+        )
     }
     override fun onStop() {
         unregisterReceiver(updates)

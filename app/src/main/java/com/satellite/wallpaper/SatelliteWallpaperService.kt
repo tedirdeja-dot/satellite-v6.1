@@ -39,11 +39,9 @@ class SatelliteWallpaperService : WallpaperService() {
         }
 
         private fun register(receiver: BroadcastReceiver, filter: IntentFilter) {
-            if (Build.VERSION.SDK_INT >= 33) {
-                registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
-            } else {
-                registerReceiver(receiver, filter)
-            }
+            androidx.core.content.ContextCompat.registerReceiver(
+                this@SatelliteWallpaperService, receiver, filter, androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
+            )
         }
 
         override fun onCreate(surfaceHolder: SurfaceHolder) {

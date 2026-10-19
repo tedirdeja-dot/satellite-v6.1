@@ -21,6 +21,8 @@ import java.util.Locale
 import java.util.concurrent.Executors
 
 object WallpaperRepository {
+    const val ACTION_STATUS = "com.satellite.wallpaper.STATUS"
+    fun isRunning() = running
     private val io = Executors.newSingleThreadExecutor()
     private var running = false // main thread only
     private var armed = true
@@ -53,6 +55,10 @@ object WallpaperRepository {
     }
     fun loadCached(c: Context): Bitmap? {
         val f = cacheFile(c)
+        if (!f.exists()) {
+            val legacy = File(c.filesDir, "satellite_cache.jpg")
+            if (legacy.exists()) runCatching { legacy.renameTo(f) }
+        }
         if (!f.exists()) return null
         val o = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeFile(f.path, o)
@@ -92,6 +98,7 @@ object WallpaperRepository {
         val lines = (attemptLog(c).lines().filter { it.isNotBlank() } + "$stamp · $source · $text").takeLast(10)
         prefs(c).edit().putString("attempt_log", lines.joinToString("\n")).apply()
         Log.i("SatelliteTiming", "$source: $text")
+        c.sendBroadcast(Intent(ACTION_STATUS).setPackage(c.packageName))
     }
     fun attemptLog(c: Context) = prefs(c).getString("attempt_log", "") ?: ""
 
@@ -105,9 +112,20 @@ object WallpaperRepository {
     /** Only system USER_PRESENT receivers call this entry point. No timers or retries later. */
     fun onUnlock(context: Context) {
         val app = context.applicationContext
-        if (!unlocked(app) || !armed) return
-        armed = false // coalesce the service and wallpaper receivers, even with interval zero
-        if (!prefs(app).contains("interval_minutes") || running || !due(app)) return
+        if (!unlocked(app)) {
+            note(app, "desbloqueo", "aviso recibido, pero Android aún indica pantalla bloqueada o apagada")
+            return
+        }
+        if (!armed) return // duplicate notification within the same unlock session
+        armed = false
+        note(app, "desbloqueo", "aviso recibido")
+        if (!prefs(app).contains("interval_minutes")) {
+            note(app, "desbloqueo", "elige el intervalo en la app antes de descargar"); return
+        }
+        if (running) { note(app, "desbloqueo", "ya hay una captura en curso"); return }
+        if (!due(app)) {
+            note(app, "desbloqueo", "esperando intervalo de ${interval(app)} min desde la última actualización"); return
+        }
         if (!isOnline(app)) { note(app, "desbloqueo", "sin conexión; se conserva la imagen"); return }
         running = true
         val token = ++generation

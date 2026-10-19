@@ -11,8 +11,8 @@ android {
         applicationId = "com.satellite.wallpaper"
         minSdk = 23
         targetSdk = 35
-        versionCode = 22
-        versionName = "4.2.1"
+        versionCode = 23
+        versionName = "4.2.2"
     }
 
     // Keystore fija incluida en el repo: todas las compilaciones de GitHub llevan la misma firma

@@ -29,12 +29,14 @@ class MainActivity : Activity() {
     private var leavingActivity = false
     private val updates = object : android.content.BroadcastReceiver() {
         override fun onReceive(context: android.content.Context, intent: Intent) {
-            if (isActivityUsable()) loadCachedPreview()
+            if (!isActivityUsable()) return
+            if (intent.action == SatelliteWallpaperService.ACTION_CACHE_UPDATED) loadCachedPreview()
+            updateStatus()
         }
     }
     override fun onStart() {
         super.onStart()
-        val filter = android.content.IntentFilter(SatelliteWallpaperService.ACTION_CACHE_UPDATED)
+        val filter = android.content.IntentFilter(SatelliteWallpaperService.ACTION_CACHE_UPDATED).apply { addAction(WallpaperRepository.ACTION_STATUS) }
         androidx.core.content.ContextCompat.registerReceiver(
             this, updates, filter, androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
         )
@@ -123,9 +125,22 @@ class MainActivity : Activity() {
         val ignoring = getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(packageName)
         findViewById<View>(R.id.grant_battery).visibility = if (ignoring) View.GONE else View.VISIBLE
         loadCachedPreview()
+        updateStatus()
+    }
+
+    private fun updateStatus() {
         val log = WallpaperRepository.attemptLog(this)
-        findViewById<TextView>(R.id.attempt_log).text =
-            if (log.isBlank()) "${versionLabel()} · sin intentos en segundo plano todavía." else "${versionLabel()} · últimos intentos:\n$log"
+        findViewById<TextView>(R.id.attempt_log).text = "${versionLabel()} · últimos intentos:\n$log"
+        val busy = WallpaperRepository.isRunning()
+        progress.visibility = if (busy) View.VISIBLE else View.GONE
+        if (busy) {
+            status.visibility = View.VISIBLE
+            status.text = "Descargando la vista de Zoom Earth… Mantén el teléfono desbloqueado."
+        } else if (!WallpaperRepository.cacheFile(this).exists()) {
+            status.visibility = View.VISIBLE
+            status.text = WallpaperRepository.lastError?.let { "No se pudo descargar: $it\nConsulta el registro inferior." }
+                ?: "Sin imagen todavía. Elige el intervalo, bloquea y desbloquea el teléfono. Consulta abajo si se recibe el aviso."
+        } else status.visibility = View.GONE
     }
 
     private fun openPicker() {

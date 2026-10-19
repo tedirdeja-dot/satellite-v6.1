@@ -38,17 +38,17 @@ class SatelliteWallpaperService : WallpaperService() {
             }
         }
 
-        private fun register(receiver: BroadcastReceiver, filter: IntentFilter) {
+        private fun register(receiver: BroadcastReceiver, filter: IntentFilter, flags: Int) {
             androidx.core.content.ContextCompat.registerReceiver(
-                this@SatelliteWallpaperService, receiver, filter, androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
+                this@SatelliteWallpaperService, receiver, filter, flags
             )
         }
 
         override fun onCreate(surfaceHolder: SurfaceHolder) {
             super.onCreate(surfaceHolder)
             setOffsetNotificationsEnabled(true)
-            register(cacheReceiver, IntentFilter(ACTION_CACHE_UPDATED))
-            register(unlockReceiver, IntentFilter(Intent.ACTION_USER_PRESENT).apply { addAction(Intent.ACTION_SCREEN_OFF) })
+            register(cacheReceiver, IntentFilter(ACTION_CACHE_UPDATED), androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED)
+            register(unlockReceiver, IntentFilter(Intent.ACTION_USER_PRESENT).apply { addAction(Intent.ACTION_SCREEN_OFF) }, androidx.core.content.ContextCompat.RECEIVER_EXPORTED)
             UnlockService.start(this@SatelliteWallpaperService)
             loadAndDraw()
         }

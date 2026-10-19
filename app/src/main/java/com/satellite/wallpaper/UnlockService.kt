@@ -36,7 +36,7 @@ class UnlockService : Service() {
             addAction(Intent.ACTION_SCREEN_OFF)
         }
         androidx.core.content.ContextCompat.registerReceiver(
-            this, receiver, filter, androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
+            this, receiver, filter, androidx.core.content.ContextCompat.RECEIVER_EXPORTED
         )
     }
 
